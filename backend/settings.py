@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django_filters',
     
     # Nuestras apps
-    'users',
     'projects',
     'tasks',
 ]
@@ -86,8 +85,6 @@ DATABASES = {
     }
 }
 
-# AUTH_USER_MODEL - Usaremos el custom User de la app users
-# AUTH_USER_MODEL = 'users.User'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
