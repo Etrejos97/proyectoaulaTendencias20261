@@ -1,0 +1,13 @@
+
+# Variables sensibles
+.env
+
+# Base de datos local
+db.sqlite3
+
+# Archivos Python basura
+__pycache__/
+*.pyc
+
+# Entorno virtual
+entorno/
