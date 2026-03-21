@@ -24,6 +24,12 @@ ALLOWED_HOSTS = ['*']  # Para desarrollo, restringir en producción
 
 # Application definition
 INSTALLED_APPS = [
+    
+    # Nuestras apps
+    'users',
+    'projects',
+    'tasks',
+    
     # Django base
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,14 +43,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',  # Documentación API
     'corsheaders',      # Para frontend
+    'rest_framework_simplejwt.token_blacklist',
     
     # Filtros
     'django_filters',
     
-    # Nuestras apps
-    'users',
-    'projects',
-    'tasks',
 ]
 
 MIDDLEWARE = [
