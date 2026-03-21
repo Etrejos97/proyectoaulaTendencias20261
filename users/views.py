@@ -5,6 +5,22 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import UserSerializer
 
+class IsAdminOrSelf(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        if view.action in ['list', 'destroy'] and not request.user.is_admin:
+            return False
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        
+        if request.user.is_admin:
+            return True
+        
+        return obj == request.user
 class UserViewSet(viewsets.ModelViewSet):
    
     queryset = User.objects.all()
@@ -13,7 +29,14 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAdminOrSelf()]
+    
+    def get_queryset(self):
+        
+        if self.request.user.is_admin:
+            return User.objects.all()
+        
+        return User.objects.filter(pk=self.request.user.pk)
 
     @action(detail=False, methods=['get'], url_path='profile')
     def profile(self, request):
