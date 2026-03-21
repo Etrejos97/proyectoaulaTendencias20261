@@ -1,12 +1,10 @@
 from django.db import models
-
-# Create your models here.
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
-    """Modelo de Usuario con UUID y roles globales (admin/member)."""
+
 
     class Role(models.TextChoices):
         ADMIN = 'admin', 'Administrador'

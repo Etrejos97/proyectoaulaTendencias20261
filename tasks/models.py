@@ -6,10 +6,6 @@ from projects.models import Project
 
 
 class Task(models.Model):
-    """
-    Tarea asociada a un proyecto. Unidad fundamental de trabajo.
-    Soporta borrado lógico mediante el campo 'is_active'.
-    """
 
     class Priority(models.TextChoices):
         LOW = 'low', 'Baja'
@@ -68,7 +64,6 @@ class Task(models.Model):
         return f"{self.title} ({self.get_status_display()})"
 
     def save(self, *args, **kwargs):
-        """Auto-asigna completed_at cuando la tarea pasa a estado completada."""
         if self.status == self.Status.COMPLETED and not self.completed_at:
             self.completed_at = timezone.now()
         elif self.status != self.Status.COMPLETED:

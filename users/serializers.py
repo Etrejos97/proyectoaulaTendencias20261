@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'is_admin']
 
     def create(self, validated_data):
-        # Es necesario crear el usuario con 'create_user' para encriptar la contraseña
+        
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),

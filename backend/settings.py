@@ -1,36 +1,28 @@
-"""
-Django settings for backend project.
-Proyecto: Gestor de Tareas y Productividad - Entregable 1
-"""
-
 from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
-# Carga variables de entorno desde .env
 load_dotenv()
 
-# Build paths inside the project
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-(fu5#s$l#(8!!5q#ma=)*)s%g_(9a6*v&1std$=j*q!x)+8t62')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Para desarrollo, restringir en producción
+ALLOWED_HOSTS = ['*']  
 
-# Application definition
+
 INSTALLED_APPS = [
-    
-    # Nuestras apps
+
     'users',
     'projects',
     'tasks',
     
-    # Django base
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,20 +30,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # DRF y herramientas
     'rest_framework',
     'rest_framework_simplejwt',
-    'drf_spectacular',  # Documentación API
-    'corsheaders',      # Para frontend
+    'drf_spectacular',  
+    'corsheaders',      
     'rest_framework_simplejwt.token_blacklist',
     
-    # Filtros
+    
     'django_filters',
     
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # CORS primero
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,7 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database (SQLite para desarrollo, PostgreSQL para producción)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -89,10 +79,10 @@ DATABASES = {
     }
 }
 
-# AUTH_USER_MODEL - Usaremos el custom User de la app users
+
 AUTH_USER_MODEL = 'users.User'
 
-# Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -108,20 +98,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization (Colombia)
 LANGUAGE_CODE = 'es-co'
 TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Default primary key field type
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DRF Configuration
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -139,14 +128,12 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-# SimpleJWT Configuration (tokens)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# drf-spectacular (Documentación API)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Gestor de Tareas y Productividad API',
     'DESCRIPTION': 'API REST para gestión de tareas y proyectos - Entregable 1',
@@ -159,11 +146,10 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# CORS (para frontend)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React
+    "http://localhost:3000",  
     "http://127.0.0.1:3000",
-    "http://localhost:8080",  # Vue
+    "http://localhost:8080",  
 ]
 CORS_ALLOW_CREDENTIALS = True
 
