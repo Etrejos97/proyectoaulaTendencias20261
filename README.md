@@ -40,10 +40,10 @@ API REST desarrollada con Django Rest Framework para la gestión integral de tar
 ## Instalación y Configuración
 
 **1. Clonar el repositorio**
-# bash
+```bash
 git clone https://github.com/Etrejos97/proyectoaulaTendencias20261.git
 cd proyectoaulaTendencias20261
-
+```
 ## Crear y activar el entorno virtual
 
 # Windows
@@ -64,12 +64,15 @@ python manage.py migrate
 
 python manage.py runserver
 
-La API estará disponible en http://127.0.0.1:8000/
+La API estará disponible en 
+```
+http://127.0.0.1:8000/
+```
 
 ## Usuarios de Prueba:
 
 Crear los siguientes usuarios mediante POST /api/users/ para probar los diferentes roles:
-
+```
 {
   "username": "admin",
   "email": "admin@test.com",
@@ -83,6 +86,7 @@ Crear los siguientes usuarios mediante POST /api/users/ para probar los diferent
   "password": "member",
   "role": "member"
 }
+```
 
 ## 3. Autenticación:
 
@@ -90,12 +94,12 @@ La API usa JWT. Para autenticarse:
 
 **Obtener token**
 POST /api/token/
-
+```
 {
   "username": "admin",
   "password": "admin"
 }
-
+```
 **Usar Token en cada petición**
 
 Authorization: Bearer <access_token>
@@ -149,6 +153,12 @@ POST /api/token/refresh/
 
 #Con el servidor corriendo, acceder a:
 
-Swagger UI: http://127.0.0.1:8000/api/docs/
+Swagger UI: 
+```
+http://127.0.0.1:8000/api/docs/
+```
 
-Schema OpenAPI: http://127.0.0.1:8000/api/schema/
+Schema OpenAPI: 
+```
+http://127.0.0.1:8000/api/schema/
+```
