@@ -23,11 +23,8 @@ class IsAdminOrAssigned(permissions.BasePermission):
 class TaskViewSet(viewsets.ModelViewSet):
     
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrAssigned]
-
-    
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrAssigned]  
+      
     
     filterset_fields = ['project', 'status', 'priority', 'assigned_to', 'is_active']
     
