@@ -9,9 +9,9 @@ API REST desarrollada con Django Rest Framework para la gestión integral de tar
 | Nombre | GitHub |
 |---|---|
 | Edison Trejos | [@Etrejos97](https://github.com/Etrejos97) |
-| Juan David Cuervo | — |
+| Juan David Cuervo | [@juandDavid](https://github.com/juandDavid) |
 | Juan Felipe Marín | [@JuanFelipeMarin11](https://github.com/JuanFelipeMarin11) |
-| Laura | — |
+| Laura Osorio | — |
 
 **Asignatura:** Tendencias del Desarrollo de Software  
 **Institución:** Tecnológico de Antioquia  
@@ -40,7 +40,7 @@ API REST desarrollada con Django Rest Framework para la gestión integral de tar
 ## Instalación y Configuración
 
 **1. Clonar el repositorio**
-```bash
+# bash
 git clone https://github.com/Etrejos97/proyectoaulaTendencias20261.git
 cd proyectoaulaTendencias20261
 
@@ -54,15 +54,21 @@ entorno\Scripts\activate
 python -m venv entorno
 source entorno/bin/activate
 
-## Instalar dependencias
+# Instalar dependencias
 pip install -r requirements.txt
 
-## Aplicar migraciones
+# Aplicar migraciones
 python manage.py migrate
 
-## Correr el servidor
+**2. Correr el servidor**
 
-#Crear los siguientes usuarios mediante POST /api/users/ para probar los diferentes roles:
+python manage.py runserver
+
+La API estará disponible en http://127.0.0.1:8000/
+
+## Usuarios de Prueba:
+
+Crear los siguientes usuarios mediante POST /api/users/ para probar los diferentes roles:
 
 {
   "username": "admin",
@@ -78,9 +84,10 @@ python manage.py migrate
   "role": "member"
 }
 
-## Autenticación
+## 3. Autenticación:
 
-# La API usa JWT. Para autenticarse:
+La API usa JWT. Para autenticarse:
+
 **Obtener token**
 POST /api/token/
 
@@ -90,12 +97,14 @@ POST /api/token/
 }
 
 **Usar Token en cada petición**
+
 Authorization: Bearer <access_token>
 
-** Renovar token **
+**Renovar token**
+
 POST /api/token/refresh/
 
-##Enpoints:
+## Endpoints:
 
 **Usuarios**
 | Método    | Endpoint            | Descripción         | Auth requerida                                |
@@ -125,7 +134,7 @@ POST /api/token/refresh/
 | PUT/PATCH | /api/tasks/{id}/ | Editar tarea   | Sí (admin: cualquiera / member: solo asignadas) |
 | DELETE    | /api/tasks/{id}/ | Eliminar tarea | Sí (solo admin)                                 |
 
-**Filtros disponibles en /api/tasks
+**Filtros disponibles en /api/tasks**
 | Parámetro   | Tipo     | Ejemplo               |
 | ----------- | -------- | --------------------- |
 | status      | filter   | ?status=pending       |
@@ -136,9 +145,9 @@ POST /api/token/refresh/
 | ordering    | orden    | ?ordering=-created_at |
 
 
-##Documentación Interactiva:##
+## Documentación Interactiva:
 
-# Con el servidor corriendo, acceder a:
+#Con el servidor corriendo, acceder a:
 
 Swagger UI: http://127.0.0.1:8000/api/docs/
 
