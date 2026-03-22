@@ -47,23 +47,30 @@ cd proyectoaulaTendencias20261
 ## Crear y activar el entorno virtual
 
 # Windows
+```bash
 python -m venv entorno
 entorno\Scripts\activate
+```
 
 # Linux/Mac
+```bash
 python -m venv entorno
 source entorno/bin/activate
+```
 
 # Instalar dependencias
+```bash
 pip install -r requirements.txt
+```
 
 # Aplicar migraciones
+```bash
 python manage.py migrate
-
+```
 **2. Correr el servidor**
-
+```bash
 python manage.py runserver
-
+```
 La API estará disponible en 
 ```
 http://127.0.0.1:8000/
