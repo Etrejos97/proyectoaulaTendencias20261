@@ -30,3 +30,37 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+class ProjectMembership(models.Model):
+    class Role(models.TextChoices):
+        OWNER    = 'owner',    'Propietario'
+        EDITOR   = 'editor',   'Editor'
+        OBSERVER = 'observer', 'Observador'
+
+    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project   = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    user      = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='project_memberships'
+    )
+    role      = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        default=Role.OBSERVER,
+        verbose_name='Rol en el proyecto'
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('project', 'user')
+        verbose_name = 'Membresía de Proyecto'
+        verbose_name_plural = 'Membresías de Proyecto'
+        ordering = ['joined_at']
+
+    def __str__(self):
+        return f"{self.user} → {self.project} ({self.role})"
