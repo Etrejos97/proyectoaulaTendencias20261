@@ -98,3 +98,29 @@ class Task(models.Model):
         elif self.status != self.Status.COMPLETED:
             self.completed_at = None
         super().save(*args, **kwargs)
+
+
+class Comment(models.Model):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Tarea'
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Autor'
+    )
+    content = models.TextField(verbose_name='Contenido')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Comentario'
+        verbose_name_plural = 'Comentarios'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comentario de {self.author.username} en '{self.task.title}'"
