@@ -23,7 +23,6 @@ export default function KanbanBoard({ project, user, onBack }) {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // ── Estados comentarios ──
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -93,7 +92,7 @@ export default function KanbanBoard({ project, user, onBack }) {
     setForm(buildForm(task, defaultStatus));
     setFormError("");
     setTaskModal({ task, defaultStatus });
-    // reset comentarios
+    
     setComments([]);
     setNewComment("");
     setEditingCommentId(null);
@@ -104,7 +103,16 @@ export default function KanbanBoard({ project, user, onBack }) {
 
   const saveTask = async (e) => {
     e.preventDefault();
-    if (!form.title?.trim()) return setFormError("El título es obligatorio.");
+    if (!form.title?.trim()) {
+  setFormError("El título es obligatorio.");
+  setSaving(false);
+  return;
+}
+if (form.title.trim().length > 200) {
+  setFormError("El título no puede superar los 200 caracteres.");
+  setSaving(false);
+  return;
+}
     setSaving(true);
     setFormError("");
     const payload = {
@@ -156,7 +164,6 @@ export default function KanbanBoard({ project, user, onBack }) {
 
   const getUserName = (id) => users.find(u => u.id === id)?.username || "";
 
-  // ── Funciones comentarios ──
   const loadComments = async (taskId) => {
     setCommentsLoading(true);
     setCommentError("");
@@ -222,9 +229,11 @@ export default function KanbanBoard({ project, user, onBack }) {
           <button className="btn btn-ghost" onClick={() => setMembersOpen(true)}>
             👥 Miembros
           </button>
-          <button className="btn btn-primary" onClick={() => openTaskModal(null, "pending")}>
-            + Nueva tarea
-          </button>
+          {user?.role !== "observer" && (
+            <button className="btn btn-primary" onClick={() => openTaskModal(null, "pending")}>
+              + Nueva tarea
+            </button>
+          )}
         </div>
       </div>
 
@@ -279,18 +288,22 @@ export default function KanbanBoard({ project, user, onBack }) {
                             </div>
                           )}
                           <div className="task-actions">
-                            <button
-                              className="btn btn-ghost btn-xs"
-                              onClick={() => openTaskModal(task, task.status)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              className="btn btn-danger btn-xs"
-                              onClick={() => setDeleteConfirm(task)}
-                            >
-                              Eliminar
-                            </button>
+                            {user?.role !== "observer" && (
+                              <button
+                                className="btn btn-ghost btn-xs"
+                                onClick={() => openTaskModal(task, task.status)}
+                              >
+                                Editar
+                              </button>
+                            )}
+                            {user?.role !== "observer" && (
+                              <button
+                                className="btn btn-danger btn-xs"
+                                onClick={() => setDeleteConfirm(task)}
+                              >
+                                Eliminar
+                              </button>
+                            )}
                             {STATUS_COLS.filter(s => s.value !== task.status).map(s => (
                               <button
                                 key={`${task.id}-move-${s.value}`}
