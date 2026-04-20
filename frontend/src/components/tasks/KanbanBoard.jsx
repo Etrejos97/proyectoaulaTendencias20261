@@ -4,6 +4,12 @@ import { STATUS_COLS, PRIORITY_MAP } from "../../constants/taskConstants";
 import TagInput from "../common/TagInput";
 import Spinner from "../common/Spinner";
 import Alert from "../common/Alert";
+import {
+  getComments,
+  createComment,
+  updateComment,
+  deleteComment,
+} from "../../api/api";
 
 export default function KanbanBoard({ project, user, onBack }) {
   const [tasks, setTasks] = useState([]);
@@ -17,27 +23,30 @@ export default function KanbanBoard({ project, user, onBack }) {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // ✅ useEffect directo sin useCallback — elimina warnings de memoización
+  // ── Estados comentarios ──
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
+  const [commentError, setCommentError] = useState("");
+
   useEffect(() => {
     let cancelled = false;
-
     const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
         const usersEndpoint = user?.is_admin ? "/users/" : "/users/profile/";
-
         const [t, u] = await Promise.allSettled([
           api.get(`/tasks/?project=${project.id}`),
           api.get(usersEndpoint),
         ]);
-
         if (cancelled) return;
-
         const tareas = t.status === "fulfilled"
           ? Array.isArray(t.value) ? t.value : (t.value?.results ?? [])
           : [];
-
         const miembros = u.status === "fulfilled"
           ? Array.isArray(u.value)
             ? u.value
@@ -47,7 +56,6 @@ export default function KanbanBoard({ project, user, onBack }) {
                 ? [u.value]
                 : []
           : [];
-
         setTasks(tareas);
         setUsers(miembros);
       } catch (e) {
@@ -56,7 +64,6 @@ export default function KanbanBoard({ project, user, onBack }) {
         if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
     return () => { cancelled = true; };
   }, [project.id, user?.is_admin]);
@@ -86,6 +93,13 @@ export default function KanbanBoard({ project, user, onBack }) {
     setForm(buildForm(task, defaultStatus));
     setFormError("");
     setTaskModal({ task, defaultStatus });
+    // reset comentarios
+    setComments([]);
+    setNewComment("");
+    setEditingCommentId(null);
+    setEditCommentContent("");
+    setCommentError("");
+    if (task) loadComments(task.id);
   };
 
   const saveTask = async (e) => {
@@ -141,6 +155,60 @@ export default function KanbanBoard({ project, user, onBack }) {
   };
 
   const getUserName = (id) => users.find(u => u.id === id)?.username || "";
+
+  // ── Funciones comentarios ──
+  const loadComments = async (taskId) => {
+    setCommentsLoading(true);
+    setCommentError("");
+    try {
+      const data = await getComments(taskId);
+      setComments(Array.isArray(data) ? data : data?.results ?? []);
+    } catch {
+      setCommentError("No se pudieron cargar los comentarios.");
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    const trimmed = newComment.trim();
+    if (!trimmed || !taskModal?.task) return;
+    setCommentSubmitting(true);
+    setCommentError("");
+    try {
+      const created = await createComment(taskModal.task.id, trimmed);
+      setComments(prev => [...prev, created]);
+      setNewComment("");
+    } catch {
+      setCommentError("No se pudo agregar el comentario.");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    const trimmed = editCommentContent.trim();
+    if (!trimmed) return;
+    setCommentError("");
+    try {
+      const updated = await updateComment(commentId, trimmed);
+      setComments(prev => prev.map(c => c.id === commentId ? updated : c));
+      setEditingCommentId(null);
+    } catch {
+      setCommentError("No se pudo editar el comentario.");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("¿Eliminar este comentario?")) return;
+    setCommentError("");
+    try {
+      await deleteComment(commentId);
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch {
+      setCommentError("No se pudo eliminar el comentario.");
+    }
+  };
 
   return (
     <div>
@@ -201,19 +269,15 @@ export default function KanbanBoard({ project, user, onBack }) {
                               </span>
                             )}
                           </div>
-
                           {task.tags?.length > 0 && (
                             <div className="task-tags">
                               {task.tags.map((tag, i) => {
                                 const label = typeof tag === "string" ? tag : tag.name;
                                 const key = typeof tag === "string" ? tag : (tag.id ?? i);
-                                return (
-                                  <span key={key} className="tag">{label}</span>
-                                );
+                                return <span key={key} className="tag">{label}</span>;
                               })}
                             </div>
                           )}
-
                           <div className="task-actions">
                             <button
                               className="btn btn-ghost btn-xs"
@@ -227,17 +291,15 @@ export default function KanbanBoard({ project, user, onBack }) {
                             >
                               Eliminar
                             </button>
-                            {STATUS_COLS
-                              .filter(s => s.value !== task.status)
-                              .map(s => (
-                                <button
-                                  key={`${task.id}-move-${s.value}`}
-                                  className="btn btn-ghost btn-xs"
-                                  onClick={() => moveTask(task, s.value)}
-                                >
-                                  → {s.label}
-                                </button>
-                              ))}
+                            {STATUS_COLS.filter(s => s.value !== task.status).map(s => (
+                              <button
+                                key={`${task.id}-move-${s.value}`}
+                                className="btn btn-ghost btn-xs"
+                                onClick={() => moveTask(task, s.value)}
+                              >
+                                → {s.label}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       ))
@@ -333,10 +395,88 @@ export default function KanbanBoard({ project, user, onBack }) {
                   onChange={tags => setForm({ ...form, tags })}
                 />
               </div>
+
+              {/* ── Sección comentarios: solo al editar tarea existente ── */}
+              {taskModal.task && (
+                <div className="field" style={{ borderTop: "1px solid #e2e8f0", paddingTop: "12px", marginTop: "4px" }}>
+                  <label className="label">Comentarios ({comments.length})</label>
+                  {commentError && (
+                    <p style={{ color: "#e53e3e", fontSize: "12px", marginBottom: "6px" }}>
+                      {commentError}
+                    </p>
+                  )}
+                  {commentsLoading ? (
+                    <Spinner />
+                  ) : comments.length === 0 ? (
+                    <p style={{ fontSize: "12px", color: "gray", marginBottom: "8px" }}>
+                      No hay comentarios aún.
+                    </p>
+                  ) : (
+                    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 12px 0", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {comments.map(c => {
+                        const isOwner = c.author === user?.id;
+                        return (
+                          <li key={c.id} style={{ background: "#f7fafc", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "8px 10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                              <span style={{ fontWeight: 600, fontSize: "12px" }}>{c.author_username}</span>
+                              <span style={{ fontSize: "11px", color: "gray" }}>
+                                {new Date(c.created_at).toLocaleString("es-CO")}
+                                {c.updated_at !== c.created_at && <em> · editado</em>}
+                              </span>
+                            </div>
+                            {editingCommentId === c.id ? (
+                              <div>
+                                <textarea
+                                  className="textarea"
+                                  rows={2}
+                                  value={editCommentContent}
+                                  onChange={e => setEditCommentContent(e.target.value)}
+                                  style={{ marginBottom: "6px" }}
+                                />
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button type="button" className="btn btn-primary btn-xs" onClick={() => handleUpdateComment(c.id)}>Guardar</button>
+                                  <button type="button" className="btn btn-ghost btn-xs" onClick={() => setEditingCommentId(null)}>Cancelar</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p style={{ fontSize: "13px", margin: "0 0 4px 0", whiteSpace: "pre-wrap" }}>{c.content}</p>
+                            )}
+                            {isOwner && editingCommentId !== c.id && (
+                              <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
+                                <button type="button" className="btn btn-ghost btn-xs" onClick={() => { setEditingCommentId(c.id); setEditCommentContent(c.content); }}>Editar</button>
+                                <button type="button" className="btn btn-danger btn-xs" onClick={() => handleDeleteComment(c.id)}>Eliminar</button>
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <textarea
+                      className="textarea"
+                      rows={2}
+                      placeholder="Escribe un comentario…"
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      disabled={commentSubmitting}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleAddComment}
+                      disabled={commentSubmitting || !newComment.trim()}
+                      style={{ alignSelf: "flex-end" }}
+                    >
+                      {commentSubmitting ? <Spinner /> : "Comentar"}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/* ── fin comentarios ── */}
+
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setTaskModal(null)}>
-                  Cancelar
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setTaskModal(null)}>Cancelar</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? <Spinner /> : "Guardar"}
                 </button>

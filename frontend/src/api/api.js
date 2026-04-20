@@ -11,7 +11,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor: maneja 401 global
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -23,5 +22,17 @@ api.interceptors.response.use(
     return Promise.reject(error.response || error);
   }
 );
+
+export const getComments = (taskId) =>
+  api.get(`/comments/?task=${taskId}`);
+
+export const createComment = (taskId, content) =>
+  api.post("/comments/", { task: taskId, content });
+
+export const updateComment = (commentId, content) =>
+  api.patch(`/comments/${commentId}/`, { content });
+
+export const deleteComment = (commentId) =>
+  api.delete(`/comments/${commentId}/`);
 
 export default api;
