@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import Task, Tag, Comment
-from .serializers import TaskSerializer, TagSerializer, CommentSerializer
+from .models import Task, Tag, Comment, TaskHistory
+from .serializers import TaskSerializer, TagSerializer, CommentSerializer, TaskHistorySerializer
 from projects.models import ProjectMembership
 from projects.permissions import IsProjectMember, IsProjectEditorOrOwner, IsCommentAuthorOrAdmin
 
@@ -33,6 +33,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         ).values_list('project_id', flat=True)
         return Task.objects.filter(project__in=member_projects)
 
+    def perform_update(self, serializer):
+        
+        serializer.instance._changed_by = self.request.user
+        serializer.save()
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -66,3 +70,24 @@ class CommentViewSet(viewsets.ModelViewSet):
             if not is_member:
                 raise PermissionDenied("No eres miembro de este proyecto.")
         serializer.save(author=self.request.user)
+
+
+class TaskHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TaskHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['task', 'field_changed']   
+    ordering_fields = ['changed_at']               
+
+    def get_queryset(self):
+        user = self.request.user
+        task_id = self.request.query_params.get('task')
+        if user.is_admin:
+            qs = TaskHistory.objects.all()
+        else:
+            member_projects = ProjectMembership.objects.filter(
+                user=user
+            ).values_list('project_id', flat=True)
+            qs = TaskHistory.objects.filter(task__project__in=member_projects)
+        if task_id:
+            qs = qs.filter(task_id=task_id)
+        return qs

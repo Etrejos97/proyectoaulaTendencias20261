@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Task, Tag, Comment
+from django.utils import timezone
+from .models import Task, Tag, Comment, TaskHistory
 from projects.serializers import ProjectSerializer
 from users.serializers import UserSerializer
 
@@ -39,7 +40,6 @@ class TagSlugRelatedField(serializers.SlugRelatedField):
 
 
 class TaskSerializer(serializers.ModelSerializer):
-
     project_info = ProjectSerializer(source='project', read_only=True)
     assigned_to_info = UserSerializer(source='assigned_to', read_only=True)
     tags = TagSlugRelatedField(
@@ -61,13 +61,21 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         project = attrs.get('project')
 
-        if project and project.status != 'active':
-            raise serializers.ValidationError(
-                {"project": "Prohibido: No se pueden agregar ni asignar tareas a un proyecto archivado o inactivo."}
-            )
+        if project:
+            # Bloqueo por status archivado
+            if project.status == 'archived':
+                raise serializers.ValidationError(
+                    {"project": "Prohibido: No se pueden agregar tareas a un proyecto archivado."}
+                )
+            # Bloqueo por fecha vencida (aunque el status siga active)
+            if project.due_date and project.due_date < timezone.now():
+                raise serializers.ValidationError(
+                    {"project": "Prohibido: No se pueden agregar tareas a un proyecto vencido."}
+                )
 
         return attrs
-    
+
+
 class CommentSerializer(serializers.ModelSerializer):
     author_username = serializers.CharField(source='author.username', read_only=True)
 
@@ -75,3 +83,16 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'task', 'author', 'author_username', 'content', 'created_at', 'updated_at']
         read_only_fields = ['id', 'author', 'created_at', 'updated_at']
+
+
+class TaskHistorySerializer(serializers.ModelSerializer):
+    changed_by_username = serializers.CharField(source='changed_by.username', read_only=True)
+
+    class Meta:
+        model = TaskHistory
+        fields = [
+            'id', 'task', 'changed_by', 'changed_by_username',
+            'field_changed', 'old_value', 'new_value', 'changed_at'
+        ]
+        read_only_fields = ['id', 'task', 'changed_by', 'changed_by_username',
+                            'field_changed', 'old_value', 'new_value', 'changed_at']

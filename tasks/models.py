@@ -98,6 +98,8 @@ class Task(models.Model):
         elif self.status != self.Status.COMPLETED:
             self.completed_at = None
         super().save(*args, **kwargs)
+
+
 class Comment(models.Model):
     task = models.ForeignKey(
         Task,
@@ -122,3 +124,42 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comentario de {self.author} en {self.task}"
+
+
+class TaskHistory(models.Model):
+
+    class FieldChanged(models.TextChoices):
+        STATUS = 'status', 'Estado'
+        PRIORITY = 'priority', 'Prioridad'
+        ASSIGNED_TO = 'assigned_to', 'Asignado a'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='history',
+        verbose_name='Tarea'
+    )
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='task_changes',
+        verbose_name='Modificado por'
+    )
+    field_changed = models.CharField(
+        max_length=20,
+        choices=FieldChanged.choices,
+        verbose_name='Campo modificado'
+    )
+    old_value = models.CharField(max_length=200, blank=True, verbose_name='Valor anterior')
+    new_value = models.CharField(max_length=200, blank=True, verbose_name='Valor nuevo')
+    changed_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha del cambio')
+
+    class Meta:
+        verbose_name = 'Historial de tarea'
+        verbose_name_plural = 'Historial de tareas'
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f"{self.task} — {self.field_changed}: {self.old_value} → {self.new_value}"
